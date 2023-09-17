@@ -8,8 +8,8 @@ import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import InputBase from "@mui/material/InputBase";
 import "./Home.css";
-import { useNavigate } from "react-router-dom";
 import LoadingButton from "@mui/lab/LoadingButton";
+
 
 function Home() {
   const [topic, setTopic] = useState("");
@@ -17,21 +17,23 @@ function Home() {
   const [isTopicSelected, setIsTopicSelected] = useState(false);
   const [isDateSelected, setIsDateSelected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+
+
 
   const getTweets = async (topic, date) => {
     try {
       setIsLoading(true);
       // TODO: Get the backend URL with query parameters
-      const url = new URL("http://your-backend-url/get_tweets");
+      const url = new URL("http://localhost:5000/get_tweets");
       url.searchParams.append("topic", topic);
       url.searchParams.append("date", date);
 
       const response = await fetch(url, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ topic, date }),
       });
 
       if (!response.ok) {
@@ -49,13 +51,35 @@ function Home() {
   };
 
   const handleSearch = async () => {
-    const searchData = await getTweets(topic, date);
+    try {
+      setIsLoading(true);
+      const response = await fetch("http://localhost:5000/get_tweets", { // the line that isn't running
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic, date}),
+      });
+
+      if(!response.ok){
+        throw new Error("Network response not ok");
+      }
+
+      const data = await response.json();
+      setIsLoading(false);
+
+      // history.pushState(`/results?query=${topic}&date=${date}`, { searchData: data});
+    } catch (error) {
+      console.error("Error:", error);
+      setIsLoading(false);
+    }
+    /* const searchData = await getTweets(topic, date);
     if (searchData != null) {
       console.log("searchData is null.");
     }
     if (searchData) {
       navigate(`/results?query=${topic}&date=${date}`, { searchData });
-    }
+    } */
   };
 
   const checkButtonDisabled = () => {

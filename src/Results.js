@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -10,10 +10,23 @@ const Results = () => {
   const queryParams = new URLSearchParams(location.search);
   const query = queryParams.get("query");
   const selectedDate = queryParams.get("date");
+  const [searchData, setSearchData] = useState(null);
 
   const handleGoBack = () => {
     navigate(-1);
   };
+
+  useEffect(() => {
+    fetch(`http://localhost:5000`)
+    .then((response) => response.json())
+    .then((data) => {
+      setSearchData(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+    });
+  }, []);
+  
 
   return (
     <div className="App">
@@ -43,7 +56,12 @@ const Results = () => {
         <h2>{query}</h2>
         <p>Search Query: {query}</p>
         <p>Selected Date: {selectedDate}</p>
-        {/* // TODO: Add data visualizations & results from backend call */}
+        {searchData && (
+          <>
+          <h3>Sentiment Analysis Results:</h3>
+          <pre>{JSON.stringify(searchData.sentiment_results, null, 2)}</pre>
+          </>
+        )}
       </header>
     </div>
   );
