@@ -7,23 +7,55 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import InputBase from "@mui/material/InputBase";
-import Button from "@mui/material/Button";
 import "./Home.css";
 import { useNavigate } from "react-router-dom";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 function Home() {
   const [topic, setTopic] = useState("");
   const [date, setDate] = useState("");
   const [isTopicSelected, setIsTopicSelected] = useState(false);
   const [isDateSelected, setIsDateSelected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSearch = () => {
-    // Perform your search logic here
-    // For example, you can fetch search results from an API
+  const getTweets = async (topic, date) => {
+    try {
+      setIsLoading(true);
+      // TODO: Get the backend URL with query parameters
+      const url = new URL("http://your-backend-url/get_tweets");
+      url.searchParams.append("topic", topic);
+      url.searchParams.append("date", date);
 
-    // After performing the search, navigate to the Results page with props
-    navigate(`/results?query=${topic}&date=${date}`);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json(); // TODO: Parse the response JSON.
+      console.log(data);
+      setIsLoading(false);
+      return data;
+    } catch (error) {
+      console.error("Error:", error);
+      setIsLoading(false);
+      return null;
+    }
+  };
+
+  const handleSearch = async () => {
+    const searchData = await getTweets(topic, date);
+    if (searchData != null) {
+      console.log("searchData is null.");
+    }
+    if (searchData) {
+      navigate(`/results?query=${topic}&date=${date}`, { searchData });
+    }
   };
 
   const checkButtonDisabled = () => {
@@ -79,18 +111,19 @@ function Home() {
               </Select>
             </FormControl>
           </Box>
-          <Button
+          <LoadingButton
             variant="contained"
             color="primary"
             onClick={handleSearch}
             disabled={!isTopicSelected || !isDateSelected}
+            loading={isLoading}
             sx={{
               marginLeft: 2,
               height: "100%",
             }}
           >
             Search
-          </Button>
+          </LoadingButton>
         </Paper>
       </header>
     </div>
