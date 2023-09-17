@@ -12,21 +12,26 @@ import requests
 from datetime import date, timedelta
 import sentiment_analysis
 from flask import Flask, request, jsonify
-from flask_cors import cross_origin
+from flask_cors import cross_origin, CORS
+import re
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-
 headers = {"Authorization": f"Bearer {'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'}"}
 API_URL = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
 
-# date and time stuff
-today_date = date.today()
-date_monthAgo = today_date - timedelta(days = 30)
-date_3monthAgo = today_date = timedelta(days = 90)
-date_6monthAgo = today_date = timedelta(weeks = 26)
-date_1yearAgo = today_date = timedelta(weeks = 52)
+# # date and time stuff
+# today_date = date.today()
+# date_monthAgo = today_date - timedelta(days = 30)
+# date_3monthAgo = today_date - timedelta(days = 90)
+# date_6monthAgo = today_date - timedelta(weeks = 26)
+# date_1yearAgo = today_date - timedelta(weeks = 52)
+
+# def split_dates(user_date_selection: str):
+      
+#     pass
+
 
 #selenium organization
 
@@ -38,13 +43,13 @@ def get_tweets():
     date = data.get('date')
 
     keywords = topic
-
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("webdriver.chrome.driver=/Users/rachellee/Downloads/chromedriver_mac64/chromedriver")
     driver = webdriver.Chrome(options = chrome_options)
+    driver.execute_script("window.open('about:blank', '_blank');")
+    driver.switch_to.window(driver.window_handles[-1])
     driver.get("https://twitter.com/")
     wait = WebDriverWait(driver, 10)
-
 
     login_button = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'a[data-testid="loginButton"]')))
     login_button.click()
@@ -95,14 +100,18 @@ def get_tweets():
                 break
         except Exception as e:
             print(f"Error extracting tweet: {str(e)}")
+            continue
         if x >= max_tweets:
             break
+    # print(tweetlist)
+    non_special_pattern = re.compile(r'[^\W_]+')
+    tweetlist = [tweet for tweet in tweetlist if (tweet.replace(" ", "") != "") and non_special_pattern.search(tweet)]
     print(tweetlist)
-    sentiment_results = sentiment_analysis.analyze_sentiments(tweetlist)
-    driver.quit()
-    return jsonify(sentiment_results), 200
     
-
+    sentiment_results = sentiment_analysis.get_sentiments(tweetlist)
+    sentiment_analysis.get_bar_plot(sentiment_results[1])
+    driver.quit()
+    return jsonify(sentiment_results[1]), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

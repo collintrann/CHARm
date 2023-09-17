@@ -17,11 +17,14 @@ def query(payload):
 # returns the positive score as a float
 def get_positive_score(data) -> float:
     positive = None
-    if data[0][0]['label'] == 'POSITIVE':
-        positive = data[0][0]['score']
-    else:
-        positive = data[0][1]['score']
-    return positive
+    try:
+        if data[0][0]['label'] == 'POSITIVE':
+            positive = data[0][0]['score']
+        else:
+            positive = data[0][1]['score']
+        return positive
+    except:
+        pass
 
 # runs sentiment analysis on list of strings and returns a float list of sentiment scores
 def get_sentiments(tweetlist):
@@ -35,6 +38,11 @@ def get_sentiments(tweetlist):
     for tweet in tweetlist:
         data = query({"inputs": tweet})
         score = get_positive_score(data)
+        if score is None:
+            continue
+        if type(score) != int and type(score) != float:
+            continue
+        print(score)
         if score >= 0.5:
             scores.append({score: "POSITIVE"})
             num_positive += 1
@@ -49,7 +57,8 @@ def get_sentiments(tweetlist):
             most_negative_tweet = tweet
     #ratio = num_positive / num_negative
     #sentiment = (scores, ratio, most_positive_tweet, most_negative_tweet)
-    sentiment = (scores, {"POSITIVES": num_positive, "NEGATIVES": num_negative}, most_positive_tweet, most_negative_tweet)
+    sentiment = (scores, {"POSITIVES": num_positive, "NEGATIVES": num_negative, "MOST_POS_TWEET": most_positive_tweet, "MOST_NEG_TWEET": most_negative_tweet}, most_positive_tweet, most_negative_tweet)
+    print(sentiment[1])
     return sentiment
 
 def generate_bar_plot(data: dict): 
@@ -59,22 +68,47 @@ def generate_bar_plot(data: dict):
     positive_or_negative = list(data.keys())
     values = list(data.values())
   
-    graph = plt.figure(figsize = (10, 5))
+    #graph = plt.figure(figsize = (10, 5))
     
     # creating the bar plot
     plt.bar(positive_or_negative, values, width = 0.4)
     plt.title("Number of positive and negative sentiment tweets")
-    plt.savefig('plot.png')
-    #plt.show()
+    plt.savefig('plot.png', transparent=True)
+    plt.show() # DELETE LATER
 
 def generate_histogram(data: list[float], keyword, time_in_months: int):
     plt.hist(data)
     plt.title(f"Sentiment around {keyword} over the past {time_in_months} months")
     plt.show()
 
+def generate_bar_chart(data:list[dict], keyword, time_in_months: int):
+    # DATA IS LIST OF DICTS OF LENGTH 2 (containing positive and negative count)
+    barWidth = 0.3
+    positives = [x["POSITIVES"] for x in data]
+    negatives = [x["NEGATIVES"] for x in data]
+    positive_percentages = [((positive / (len(positives) + len(negatives))) * 100) for positive in positives]
+    negative_percentages = [(100 - positive_percentages[i]) for i in range(len(positive_percentages))]
+    bar1 = np.arange(len(positives))
+    bar2 = [x + barWidth for x in bar1]
+    plt.bar(bar1, negative_percentages, color = 'r', width = barWidth, label = "Percent Negative")
+    plt.bar(bar2, positive_percentages, color = 'b', width = barWidth, label = "Percent Positive")
+    plt.title(f"Sentiment around {keyword} over the past {time_in_months} months")
+    plt.xlabel("Positive and Negative Tweets\n\nINSERT MOST POSITIVE TWEET HERE\n\nINSERT MOST NEGATIVE TWEET HERE")
+    plt.ylabel("Percent")
+    plt.legend()
+    #plot.xticks([x + barWidth for x in range(len(positive_percentages))], [LIST OF DATES])
+    plt.savefig('plot.png', transparent=True)
+    plt.show() # REMOVE THIS LATER
+
 #scores = get_sentiments(["@verizon send me a dm I HATE YOU", "I hate you", "I REALLY love you", "I REALLY hate you"])
 #print(scores[1])
 #generate_bar_plot(scores[1])
 #generate_histogram([0.2, 0.2, 0.3, 0.5, 0.6, 0.5, 0.8], "donald trump", 6)
 
-scores = get_sentiments(["12", "Donald Trump", "Joe Biden", "35", "2413", "2401", "@POTUS45", "20.2K", "VIEW ALL"])
+#scores = get_sentiments(["12", "Donald Trump", "Joe Biden", "35", "2413", "2401", "@POTUS45", "20.2K", "VIEW ALL"])
+#generate_bar_chart([{"POSITIVES": 20, "NEGATIVES": 10}, {"POSITIVES": 19, "NEGATIVES": 11}, {"POSITIVES": 18, "NEGATIVES": 12}, {"POSITIVES": 14, "NEGATIVES": 16}, {"POSITIVES": 12, "NEGATIVES": 18}], "donald trump", 6)
+
+# data = query({"inputs": "donald trump"})
+# print(data)
+# print(data[0])
+# print(data[0][0])
