@@ -99,16 +99,3 @@ def generate_bar_chart(data:list[dict], keyword, time_in_months: int):
     #plot.xticks([x + barWidth for x in range(len(positive_percentages))], [LIST OF DATES])
     plt.savefig('plot.png', transparent=True)
     plt.show() # REMOVE THIS LATER
-
-#scores = get_sentiments(["@verizon send me a dm I HATE YOU", "I hate you", "I REALLY love you", "I REALLY hate you"])
-#print(scores[1])
-#generate_bar_plot(scores[1])
-#generate_histogram([0.2, 0.2, 0.3, 0.5, 0.6, 0.5, 0.8], "donald trump", 6)
-
-#scores = get_sentiments(["12", "Donald Trump", "Joe Biden", "35", "2413", "2401", "@POTUS45", "20.2K", "VIEW ALL"])
-#generate_bar_chart([{"POSITIVES": 20, "NEGATIVES": 10}, {"POSITIVES": 19, "NEGATIVES": 11}, {"POSITIVES": 18, "NEGATIVES": 12}, {"POSITIVES": 14, "NEGATIVES": 16}, {"POSITIVES": 12, "NEGATIVES": 18}], "donald trump", 6)
-
-# data = query({"inputs": "donald trump"})
-# print(data)
-# print(data[0])
-# print(data[0][0])
